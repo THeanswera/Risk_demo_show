@@ -209,6 +209,41 @@ def format_df_scientific(df: pd.DataFrame, sci_cols: list, digits: int = 2) -> p
     return out
 
 
+# Словарь красивых названий столбцов (внутреннее имя → отображаемое)
+PRETTY = {
+    "Сценарий i": "Сценарий i",
+    "Тип здания": "Тип здания",
+    "Q_п,i (год⁻¹)": "Qп,ᵢ (год⁻¹)",
+    "t_пр,i (ч/сут)": "tпр,ᵢ (ч/сут)",
+    "t_бл,i (мин)": "tбл,ᵢ (мин)",
+    "K_ап,i": "Kап,ᵢ",
+    "ПС соответствует? (K_обн=0.8)": "ПС (Kобн)",
+    "СОУЭ соответствует? (K_СОУЭ=0.8)": "СОУЭ (Kсоуэ)",
+    "ПДЗ соответствует? (K_ПДЗ=0.8)": "ПДЗ (Kпдз)",
+    "K_обн (расч.)": "Kобн (расч.)",
+    "K_СОУЭ (расч.)": "Kсоуэ (расч.)",
+    "K_ПДЗ (расч.)": "Kпдз (расч.)",
+    "K_обн,i": "Kобн,ᵢ",
+    "K_СОУЭ,i": "Kсоуэ,ᵢ",
+    "K_ПДЗ,i": "Kпдз,ᵢ",
+    "K_п.з,i": "Kп.з,ᵢ",
+    "P_пр,i": "Pпр,ᵢ",
+    "P_э,i,j": "Pэ,ᵢ,ⱼ",
+    "t_р,i,j (мин)": "tр,ᵢ,ⱼ (мин)",
+    "t_н.э,i,j (мин)": "tн.э,ᵢ,ⱼ (мин)",
+    "t_ск,i,j (мин)": "tск,ᵢ,ⱼ (мин)",
+    "R_i,j": "Rᵢ,ⱼ",
+    "R_i = max_j(R_i,j)": "Rᵢ = maxⱼ(Rᵢ,ⱼ)",
+    "R <= R_норм?": "R ≤ Rнорм?",
+    "Группа j": "Группа j",
+}
+
+
+def prettify_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """Переименовать столбцы для красивого отображения."""
+    return df.rename(columns={k: v for k, v in PRETTY.items() if k in df.columns})
+
+
 # ═══════════════════════════════════════════════════════
 # ФОРМУЛЫ МЕТОДИКИ №1140
 # ═══════════════════════════════════════════════════════
@@ -604,7 +639,7 @@ with st.sidebar:
     st.header("📋 Справочники и настройки")
 
     # --- Справочник Q_п ---
-    st.subheader("Частота пожара Q_п,i")
+    st.subheader("Частота пожара Qп,ᵢ")
     st.caption("Приложение 3, Таблица П3.1 (п. 15)")
     building_type = st.selectbox(
         "Тип здания",
@@ -613,7 +648,7 @@ with st.sidebar:
         key="building_type_select"
     )
     q_p_ref = FIRE_FREQ_TABLE[building_type]
-    st.metric("Q_п (год⁻¹)", f"{q_p_ref:.2e}")
+    st.metric("Qп (год⁻¹)", f"{q_p_ref:.2e}")
 
     # Выбор сценария для применения Q_п
     df_scen_sidebar = st.session_state.df_scen.copy()
@@ -628,7 +663,7 @@ with st.sidebar:
         key="target_scen_qp"
     )
 
-    if st.button(f"📥 Применить Q_п к сценарию {target_scen_qp}", use_container_width=True):
+    if st.button(f"📥 Применить Qп к сценарию {target_scen_qp}", use_container_width=True):
         df = st.session_state.df_scen.copy()
         df["Сценарий i"] = pd.to_numeric(df["Сценарий i"], errors="coerce").fillna(0).astype(int)
         mask = df["Сценарий i"] == int(target_scen_qp)
@@ -642,7 +677,7 @@ with st.sidebar:
     st.divider()
 
     # --- Справочник t_нэ ---
-    st.subheader("Время начала эвакуации t_н.э")
+    st.subheader("Время начала эвакуации tн.э")
     st.caption("Приложение 4 (п. 35)")
 
     t_ne_mode = st.radio(
@@ -654,11 +689,11 @@ with st.sidebar:
     if t_ne_mode.startswith("По Таблице"):
         func_class = st.selectbox("Класс функциональной пожарной опасности", list(T_NE_TABLE.keys()))
         t_ne_ref = T_NE_TABLE[func_class]
-        st.metric("t_н.э (мин)", f"{t_ne_ref:.1f}")
+        st.metric("tн.э (мин)", f"{t_ne_ref:.1f}")
     else:
-        f_pom = st.number_input("Площадь помещения F_пом (м²)", min_value=1.0, value=100.0, step=10.0)
+        f_pom = st.number_input("Площадь помещения Fпом (м²)", min_value=1.0, value=100.0, step=10.0)
         t_ne_ref = t_ne_formula(f_pom)
-        st.metric("t_н.э (мин) = (5 + 0.01·F) / 60", f"{t_ne_ref:.3f}")
+        st.metric("tн.э (мин) = (5 + 0.01·F) / 60", f"{t_ne_ref:.3f}")
         st.caption(f"= {t_ne_ref * 60:.1f} секунд")
 
     # Выбор группы для применения t_н.э
@@ -671,12 +706,12 @@ with st.sidebar:
         ).to_list()
 
         target_grp_tne = st.selectbox(
-            "Применить t_н.э к группе",
+            "Применить tн.э к группе",
             grp_labels_tne,
             key="target_grp_tne"
         )
 
-        if st.button(f"📥 Применить t_н.э к группе", use_container_width=True):
+        if st.button("📥 Применить tн.э к группе", use_container_width=True):
             sel_idx_tne = grp_labels_tne.index(target_grp_tne)
             grp_id_tne = int(df_grp_sidebar.iloc[sel_idx_tne]["ID"])
             grp_df = st.session_state.df_grp.copy()
@@ -717,12 +752,12 @@ with st.sidebar:
             scen_idx = scen_match[0]
             t_bl_cur = safe_float(scen_df.at[scen_idx, "t_бл,i (мин)"], 12.0)
 
-            t_bl_new = st.slider("t_бл,i (мин) — время блокирования", 0.5, 180.0, float(t_bl_cur), 0.5)
-            t_p_new = st.slider("t_р,i,j (мин) — расчётное время эвакуации", 0.0, 180.0,
+            t_bl_new = st.slider("tбл,ᵢ (мин) — время блокирования", 0.5, 180.0, float(t_bl_cur), 0.5)
+            t_p_new = st.slider("tр,ᵢ,ⱼ (мин) — расчётное время эвакуации", 0.0, 180.0,
                                 float(grp_df.at[row_idx, "t_р,i,j (мин)"]), 0.5)
-            t_ne_new = st.slider("t_н.э,i,j (мин) — время начала эвакуации", 0.0, 60.0,
+            t_ne_new = st.slider("tн.э,ᵢ,ⱼ (мин) — время начала эвакуации", 0.0, 60.0,
                                  float(grp_df.at[row_idx, "t_н.э,i,j (мин)"]), 0.5)
-            t_ck_new = st.slider("t_ск,i,j (мин) — время скоплений", 0.0, 30.0,
+            t_ck_new = st.slider("tск,ᵢ,ⱼ (мин) — время скоплений", 0.0, 30.0,
                                  float(grp_df.at[row_idx, "t_ск,i,j (мин)"]), 0.5)
 
             scen_df.at[scen_idx, "t_бл,i (мин)"] = t_bl_new
@@ -744,9 +779,9 @@ with st.sidebar:
 
 st.subheader("📝 Шаг 1. Сценарии пожара (п. 9–13)")
 st.caption(
-    "Определите сценарии пожара. Для каждого сценария задайте: частоту возникновения пожара Q_п,i "
-    "(Приложение 3), время присутствия людей t_пр, время блокирования t_бл, "
-    "коэффициент АУП K_ап (п. 15), и параметры систем ПС/СОУЭ/ПДЗ (п. 41, 44, 45)."
+    "Определите сценарии пожара. Для каждого сценария задайте: частоту возникновения пожара Qп,ᵢ "
+    "(Приложение 3), время присутствия людей tпр, время блокирования tбл, "
+    "коэффициент АУП Kап (п. 15), и параметры систем ПС/СОУЭ/ПДЗ (п. 41, 44, 45)."
 )
 
 df_scen_raw = st.session_state.df_scen.copy()
@@ -818,15 +853,18 @@ df_scen_edit = st.data_editor(
     use_container_width=True,
     disabled=["K_обн (расч.)", "K_СОУЭ (расч.)", "K_ПДЗ (расч.)"],
     column_config={
-        "Сценарий i": st.column_config.NumberColumn(min_value=1, step=1),
-        "Тип здания": st.column_config.SelectboxColumn(options=list(FIRE_FREQ_TABLE.keys())),
-        "Q_п,i (год⁻¹)": st.column_config.NumberColumn(format="%.4e"),
-        "t_пр,i (ч/сут)": st.column_config.NumberColumn(format="%.1f", min_value=0.0, max_value=24.0),
-        "t_бл,i (мин)": st.column_config.NumberColumn(format="%.2f", min_value=0.1),
-        "K_ап,i": st.column_config.NumberColumn(format="%.2f", min_value=0.0, max_value=0.9),
-        "ПС соответствует? (K_обн=0.8)": st.column_config.CheckboxColumn("ПС (K_обн)"),
-        "СОУЭ соответствует? (K_СОУЭ=0.8)": st.column_config.CheckboxColumn("СОУЭ (K_СОУЭ)"),
-        "ПДЗ соответствует? (K_ПДЗ=0.8)": st.column_config.CheckboxColumn("ПДЗ (K_ПДЗ)"),
+        "Сценарий i": st.column_config.NumberColumn("Сценарий i", min_value=1, step=1),
+        "Тип здания": st.column_config.SelectboxColumn("Тип здания", options=list(FIRE_FREQ_TABLE.keys())),
+        "Q_п,i (год⁻¹)": st.column_config.NumberColumn("Qп,ᵢ (год⁻¹)", format="%.4e"),
+        "t_пр,i (ч/сут)": st.column_config.NumberColumn("tпр,ᵢ (ч/сут)", format="%.1f", min_value=0.0, max_value=24.0),
+        "t_бл,i (мин)": st.column_config.NumberColumn("tбл,ᵢ (мин)", format="%.2f", min_value=0.1),
+        "K_ап,i": st.column_config.NumberColumn("Kап,ᵢ", format="%.2f", min_value=0.0, max_value=0.9),
+        "ПС соответствует? (K_обн=0.8)": st.column_config.CheckboxColumn("ПС (Kобн)"),
+        "СОУЭ соответствует? (K_СОУЭ=0.8)": st.column_config.CheckboxColumn("СОУЭ (Kсоуэ)"),
+        "ПДЗ соответствует? (K_ПДЗ=0.8)": st.column_config.CheckboxColumn("ПДЗ (Kпдз)"),
+        "K_обн (расч.)": st.column_config.NumberColumn("Kобн (расч.)"),
+        "K_СОУЭ (расч.)": st.column_config.NumberColumn("Kсоуэ (расч.)"),
+        "K_ПДЗ (расч.)": st.column_config.NumberColumn("Kпдз (расч.)"),
     },
     key="editor_scenarios"
 )
@@ -845,10 +883,10 @@ st.session_state.df_scen = df_scen_store
 st.subheader("📝 Шаг 2. Группы эвакуируемого контингента (п. 14, Приложение 2)")
 st.caption(
     "Для каждого сценария задайте группы людей: "
-    "t_р — расчётное время эвакуации (Приложения 5–8); "
-    "t_н.э — время начала эвакуации (Приложение 4); "
-    "t_ск — время существования скоплений (плотность > 0.5 м²/м²). "
-    "Влияют на P_э по формуле (6)."
+    "tр — расчётное время эвакуации (Приложения 5–8); "
+    "tн.э — время начала эвакуации (Приложение 4); "
+    "tск — время существования скоплений (плотность > 0.5 м²/м²). "
+    "Влияют на Pэ по формуле (6)."
 )
 
 df_scen_for_groups = st.session_state.df_scen.copy()
@@ -908,12 +946,12 @@ df_grp_edit = st.data_editor(
     use_container_width=True,
     disabled=["ID"],
     column_config={
-        "ID": st.column_config.NumberColumn(min_value=1, step=1),
-        "Сценарий i": st.column_config.NumberColumn(min_value=1, step=1),
-        "Группа j": st.column_config.TextColumn(),
-        "t_р,i,j (мин)": st.column_config.NumberColumn(format="%.3f"),
-        "t_н.э,i,j (мин)": st.column_config.NumberColumn(format="%.3f"),
-        "t_ск,i,j (мин)": st.column_config.NumberColumn(format="%.3f"),
+        "ID": st.column_config.NumberColumn("ID", min_value=1, step=1),
+        "Сценарий i": st.column_config.NumberColumn("Сценарий i", min_value=1, step=1),
+        "Группа j": st.column_config.TextColumn("Группа j"),
+        "t_р,i,j (мин)": st.column_config.NumberColumn("tр,ᵢ,ⱼ (мин)", format="%.3f"),
+        "t_н.э,i,j (мин)": st.column_config.NumberColumn("tн.э,ᵢ,ⱼ (мин)", format="%.3f"),
+        "t_ск,i,j (мин)": st.column_config.NumberColumn("tск,ᵢ,ⱼ (мин)", format="%.3f"),
     },
     key="editor_groups"
 )
@@ -952,14 +990,14 @@ r_final = r_total
 
 if use_fire_doors:
     st.caption(
-        "По п. 48 Методики: R_i = P_откр · R_i(откр) + P_закр · R_i(закр), "
-        "где P_откр = 0.3, P_закр = 0.7"
+        "По п. 48 Методики: Rᵢ = Pоткр · Rᵢ(откр) + Pзакр · Rᵢ(закр), "
+        "где Pоткр = 0.3, Pзакр = 0.7"
     )
 
     dc1, dc2 = st.columns(2)
     with dc1:
         r_open_input = st.number_input(
-            "R_i (дверь открыта), год⁻¹",
+            "Rᵢ (дверь открыта), год⁻¹",
             min_value=0.0,
             value=float(r_total),
             format="%.2e",
@@ -969,7 +1007,7 @@ if use_fire_doors:
         )
     with dc2:
         r_closed_input = st.number_input(
-            "R_i (дверь закрыта), год⁻¹",
+            "Rᵢ (дверь закрыта), год⁻¹",
             min_value=0.0,
             value=0.0,
             format="%.2e",
@@ -998,12 +1036,12 @@ m1, m2, m3 = st.columns(3)
 with m1:
     st.metric("R (расчётная величина ИПР), год⁻¹", f"{r_final:.6g}")
 with m2:
-    st.metric("R_норм (нормативное значение), год⁻¹", f"{R_NORM:.1e}")
+    st.metric("Rнорм (нормативное значение), год⁻¹", f"{R_NORM:.1e}")
 with m3:
     if passed:
-        st.success("R <= R_норм: Пожарный риск ДОПУСТИМЫЙ (формула 1)")
+        st.success("R ≤ Rнорм: Пожарный риск ДОПУСТИМЫЙ (формула 1)")
     else:
-        st.error("R > R_норм: Пожарный риск ПРЕВЫШЕН (формула 1)")
+        st.error("R > Rнорм: Пожарный риск ПРЕВЫШЕН (формула 1)")
 
 # Визуальная шкала
 components.html(risk_gauge_html(r_final, R_NORM), height=420, scrolling=False)
@@ -1014,10 +1052,10 @@ components.html(risk_gauge_html(r_final, R_NORM), height=420, scrolling=False)
 # ─────────────────────────────────────────────────────
 
 st.subheader("📋 Детализация: агрегирование по сценариям — формулы (2)–(3)")
-st.caption("R_i = max_j{R_i,j} — формула (3); R = max_i{R_i} — формула (2)")
+st.caption("Rᵢ = maxⱼ{Rᵢ,ⱼ} — формула (3); R = maxᵢ{Rᵢ} — формула (2)")
 
 df_agg_view = format_df_scientific(df_agg, sci_cols=["R_i = max_j(R_i,j)"], digits=2)
-st.dataframe(df_agg_view, use_container_width=True)
+st.dataframe(prettify_columns(df_agg_view), use_container_width=True)
 
 
 st.subheader("📋 Детализация: ИПР по группам — формула (4)")
@@ -1031,7 +1069,7 @@ cols_show = [
 cols_show = [c for c in cols_show if c in df_rows_calc.columns]
 df_rows_view = df_rows_calc[cols_show].copy()
 df_rows_view = format_df_scientific(df_rows_view, sci_cols=["R_i,j", "Q_п,i (год⁻¹)"], digits=2)
-st.dataframe(df_rows_view, use_container_width=True)
+st.dataframe(prettify_columns(df_rows_view), use_container_width=True)
 
 
 st.subheader("📋 Детализация: коэффициенты по сценариям — формула (7)")
@@ -1043,20 +1081,20 @@ cols_scen = [
 cols_scen = [c for c in cols_scen if c in df_scen_calc.columns]
 df_scen_view = df_scen_calc[cols_scen].copy()
 df_scen_view = format_df_scientific(df_scen_view, sci_cols=["Q_п,i (год⁻¹)"], digits=2)
-st.dataframe(df_scen_view, use_container_width=True)
+st.dataframe(prettify_columns(df_scen_view), use_container_width=True)
 
 
 # ─────────────────────────────────────────────────────
 # ДИАГНОСТИКА P_э
 # ─────────────────────────────────────────────────────
 
-st.subheader("🔍 Диагностика P_э,i,j — формула (6)")
+st.subheader("🔍 Диагностика Pэ,ᵢ,ⱼ — формула (6)")
 
 sel_id = int(st.session_state.selected_group_id)
 if len(df_rows_calc) > 0 and "ID" in df_rows_calc.columns:
     ids = df_rows_calc["ID"].astype(int).to_list()
     default_index = ids.index(sel_id) if sel_id in ids else 0
-    sel_diag_id = st.selectbox("ID строки для диагностики P_э", ids, index=default_index)
+    sel_diag_id = st.selectbox("ID строки для диагностики Pэ", ids, index=default_index)
 
     row = df_rows_calc.loc[df_rows_calc["ID"].astype(int) == int(sel_diag_id)].iloc[0]
     t_bl = safe_float(row.get("t_бл,i (мин)", 0.0))
@@ -1066,21 +1104,21 @@ if len(df_rows_calc) > 0 and "ID" in df_rows_calc.columns:
     border = 0.8 * t_bl
 
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("0.8·t_бл (мин)", f"{border:.3f}")
-    c2.metric("t_р (мин)", f"{t_p:.3f}")
-    c3.metric("t_р + t_н.э (мин)", f"{(t_p + t_ne):.3f}")
-    c4.metric("t_ск (мин)", f"{t_ck:.3f}")
+    c1.metric("0.8·tбл (мин)", f"{border:.3f}")
+    c2.metric("tр (мин)", f"{t_p:.3f}")
+    c3.metric("tр + tн.э (мин)", f"{(t_p + t_ne):.3f}")
+    c4.metric("tск (мин)", f"{t_ck:.3f}")
 
-    st.metric("P_э,i,j", f"{safe_float(row.get('P_э,i,j', 0.0)):.4f}")
+    st.metric("Pэ,ᵢ,ⱼ", f"{safe_float(row.get('P_э,i,j', 0.0)):.4f}")
 
     if t_ck > 6:
-        st.warning("t_ск > 6 мин → по формуле (6): P_э = 0")
+        st.warning("tск > 6 мин → по формуле (6): Pэ = 0")
     elif (t_p + t_ne) <= border:
-        st.success("t_р + t_н.э <= 0.8·t_бл и t_ск <= 6 → P_э = 0.999")
+        st.success("tр + tн.э ≤ 0.8·tбл и tск ≤ 6 → Pэ = 0.999")
     elif (t_p < border) and (border < (t_p + t_ne)):
-        st.info("0.8·t_бл попадает между t_р и t_р + t_н.э → промежуточное значение (ветвь 1 формулы 6)")
+        st.info("0.8·tбл попадает между tр и tр + tн.э → промежуточное значение (ветвь 1 формулы 6)")
     else:
-        st.warning("t_р >= 0.8·t_бл → по формуле (6): P_э = 0")
+        st.warning("tр ≥ 0.8·tбл → по формуле (6): Pэ = 0")
 else:
     st.info("Нет строк групп для диагностики.")
 
@@ -1138,15 +1176,15 @@ st.subheader("📚 Справочные таблицы из Приложений
 
 with st.expander("Приложение 3 — Частота возникновения пожара (Таблица П3.1)", expanded=False):
     df_freq = pd.DataFrame([
-        {"№": i + 1, "Наименование здания": k, "Q_п (год⁻¹)": v}
+        {"№": i + 1, "Наименование здания": k, "Qп (год⁻¹)": v}
         for i, (k, v) in enumerate(FIRE_FREQ_TABLE.items()) if k != "Иное (Q_п = 4·10⁻²)"
     ])
-    df_freq = format_df_scientific(df_freq, sci_cols=["Q_п (год⁻¹)"], digits=2)
+    df_freq = format_df_scientific(df_freq, sci_cols=["Qп (год⁻¹)"], digits=2)
     st.dataframe(df_freq, use_container_width=True, hide_index=True)
 
 with st.expander("Приложение 4 — Время начала эвакуации (Таблица П4.1)", expanded=False):
     df_tne = pd.DataFrame([
-        {"№": i + 1, "Класс и характеристика": k, "t_н.э (мин)": v}
+        {"№": i + 1, "Класс и характеристика": k, "tн.э (мин)": v}
         for i, (k, v) in enumerate(T_NE_TABLE.items())
     ])
     st.dataframe(df_tne, use_container_width=True, hide_index=True)
