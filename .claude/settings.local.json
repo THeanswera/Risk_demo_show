@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -m pytest tests/ -v)",
+      "Bash(python -c \"import sys; print\\(sys.executable, sys.version\\)\")",
+      "Bash(python -c \"import streamlit\")",
+      "Bash(where python:*)",
+      "Bash(where pip:*)",
+      "Bash(C:UsersgrinyAppDataLocalProgramsPythonPython313python.exe -c \"import streamlit; import pandas; import numpy; print\\(''OK''\\)\")",
+      "Bash(\"/c/Users/griny/AppData/Local/Programs/Python/Python313/python.exe\" -c \"import streamlit; import pandas; import numpy; print\\(''OK''\\)\")",
+      "Bash(\"/c/Users/griny/AppData/Local/Programs/Python/Python313/python.exe\" -m pip list)",
+      "Bash(\"/c/Python314/python.exe\" -m pip list)",
+      "Bash(cmd.exe /c \"where streamlit 2>&1\")",
+      "Bash(cmd.exe /c \"py -3 -c \"\"import streamlit; print\\(streamlit.__version__\\)\"\" 2>&1\")",
+      "Bash(cmd.exe /c \"py -3.11 -c \"\"import sys; print\\(sys.executable\\)\"\" 2>&1\")",
+      "Bash(cmd.exe /c \"py -3.12 -c \"\"import sys; print\\(sys.executable\\)\"\" 2>&1\")",
+      "Bash(cmd.exe /c \"pip show streamlit 2>&1\")",
+      "Bash(cmd.exe /c \"pip show streamlit\")",
+      "Bash(cmd /c \"pip show streamlit\")",
+      "Bash(python -c \"import sys; print\\(sys.executable\\)\")",
+      "Bash(pip show:*)",
+      "Bash(py -3.11 -c \"import sys; print\\(sys.executable\\); import streamlit; print\\(''streamlit OK''\\)\")",
+      "Bash(py --list)",
+      "Bash(py -3.13 -c \"import streamlit; import pandas; import numpy; import pytest; print\\(''ALL OK''\\)\")",
+      "Bash(py -3.13 -m pip list)",
+      "Bash(py -3.13 -m pip install streamlit==1.36.0 pandas==2.2.2 numpy==1.26.4 pytest python-docx)",
+      "Bash(py -3.13 -c \"import sys; print\\(sys.executable\\)\")",
+      "Bash(py -3.13 -m pip install streamlit==1.36.0 pandas pytest python-docx)",
+      "Bash(py -3.13 -c \"import streamlit; print\\(''streamlit'', streamlit.__version__\\)\")",
+      "Bash(py -3.13 -m pip install streamlit pandas pytest python-docx --no-cache-dir)",
+      "Bash(py -3.13 -c \"import streamlit, pandas, numpy, pytest, docx; print\\(''ALL OK''\\)\")",
+      "Bash(py -3.13 -m pytest tests/ -v)"
+    ]
+  }
+}
