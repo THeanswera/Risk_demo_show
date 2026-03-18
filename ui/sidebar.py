@@ -171,11 +171,13 @@ def render_sidebar() -> None:
 
         st.divider()
 
-        # ── Автоматический расчёт tбл (Приложение 6) ────────────
-        st.subheader("Автоматический расчёт tбл")
-        st.caption("Приложение 6 Методики №1140 (зональная модель)")
+        # ── Аналитический расчёт tбл (Приложение N 1, раздел IV) ──
+        st.subheader("Аналитический расчёт tбл")
+        st.caption("Приложение N 1, раздел IV Методики №1140 (интегральная модель, одиночное помещение H ≤ 6 м)")
         st.info(
-            "Для более точного определения tбл используйте полевое моделирование (FDS, PyroSim).",
+            "Аналитические соотношения применимы для одиночного помещения высотой не более 6 м "
+            "при отсутствии систем противопожарной защиты, влияющих на развитие пожара. "
+            "Для более сложных случаев используйте зонные или полевые модели (FDS, PyroSim).",
             icon="ℹ️",
         )
 
@@ -189,10 +191,25 @@ def render_sidebar() -> None:
             key="tbl_eta",
             help="Обычно 0.8 — доля объёма помещения, не занятая конструкциями и оборудованием",
         )
+        spread_type_label = st.selectbox(
+            "Тип распространения пожара",
+            ["Круговое", "Линейное"],
+            key="tbl_spread_type",
+            help="Круговое — для большинства помещений; линейное — для стоянок и узких длинных помещений",
+        )
+        spread_type = "circular" if spread_type_label == "Круговое" else "linear"
+        b_width = 1.0
+        if spread_type == "linear":
+            b_width = st.number_input(
+                "Ширина полосы горения b (м)",
+                min_value=0.1, value=1.0, step=0.1,
+                key="tbl_b_width",
+                help="Перпендикулярный размер зоны горения при линейном распространении",
+            )
 
         if st.button("Рассчитать tбл", use_container_width=True, key="btn_calc_tbl"):
             try:
-                result = calc_t_block(selected_room, area_m2, height_m, eta_val)
+                result = calc_t_block(selected_room, area_m2, height_m, eta_val, spread_type, b_width)
                 st.session_state["tbl_result"] = result
             except Exception as e:
                 st.error(f"Ошибка расчёта: {e}")
