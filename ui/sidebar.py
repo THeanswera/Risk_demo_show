@@ -107,7 +107,7 @@ def render_sidebar() -> None:
 
         # Слайдеры временных параметров
         st.subheader("Временные параметры")
-        st.caption("Настройка для выбранной группы через слайдеры")
+        st.caption("Настройка для выбранной группы")
 
         df_grp_sel = st.session_state.df_grp.copy()
         if len(df_grp_sel) > 0:
@@ -137,21 +137,21 @@ def render_sidebar() -> None:
                 scen_idx = scen_match[0]
                 t_bl_cur = safe_float(scen_df.at[scen_idx, "t_бл,i (мин)"], 12.0)
 
-                t_bl_new = st.slider("tбл,ᵢ (мин) — время блокирования", 0.5, 180.0, float(t_bl_cur), 0.5)
+                t_bl_new = st.slider("tбл,ᵢ (мин) - время блокирования", 0.5, 180.0, float(t_bl_cur), 0.5)
                 t_p_new = st.slider(
-                    "tр,ᵢ,ⱼ (мин) — расчётное время эвакуации",
+                    "tр,ᵢ,ⱼ (мин) - расчётное время эвакуации",
                     0.0, 180.0,
                     float(grp_df.at[row_idx, "t_р,i,j (мин)"]),
                     0.5,
                 )
                 t_ne_new = st.slider(
-                    "tн.э,ᵢ,ⱼ (мин) — время начала эвакуации",
+                    "tн.э,ᵢ,ⱼ (мин) - время начала эвакуации",
                     0.0, 60.0,
                     float(grp_df.at[row_idx, "t_н.э,i,j (мин)"]),
                     0.5,
                 )
                 t_ck_new = st.slider(
-                    "tск,ᵢ,ⱼ (мин) — время скоплений",
+                    "tск,ᵢ,ⱼ (мин) - время скоплений",
                     0.0, 30.0,
                     float(grp_df.at[row_idx, "t_ск,i,j (мин)"]),
                     0.5,
@@ -171,14 +171,13 @@ def render_sidebar() -> None:
 
         st.divider()
 
-        # ── Аналитический расчёт tбл (Приложение N 1, раздел IV) ──
-        st.subheader("Аналитический расчёт tбл")
+        # Аналитический расчёт tбл (Приложение N 1, раздел IV)
+        st.subheader("Аналитический расчёт времени блокирования tбл")
         st.caption("Приложение N 1, раздел IV Методики №1140 (интегральная модель, одиночное помещение H ≤ 6 м)")
         st.info(
             "Аналитические соотношения применимы для одиночного помещения высотой не более 6 м "
             "при отсутствии систем противопожарной защиты, влияющих на развитие пожара. "
             "Для более сложных случаев используйте зонные или полевые модели (FDS, PyroSim).",
-            icon="ℹ️",
         )
 
         room_types = FIRE_LOAD_TABLE["Вид помещения"].tolist()
@@ -189,13 +188,13 @@ def render_sidebar() -> None:
             "Коэффициент свободного объёма η",
             min_value=0.1, max_value=1.0, value=0.8, step=0.05,
             key="tbl_eta",
-            help="Обычно 0.8 — доля объёма помещения, не занятая конструкциями и оборудованием",
+            help="Обычно 0.8 - доля объёма помещения, не занятая конструкциями и оборудованием",
         )
         spread_type_label = st.selectbox(
             "Тип распространения пожара",
             ["Круговое", "Линейное"],
             key="tbl_spread_type",
-            help="Круговое — для большинства помещений; линейное — для стоянок и узких длинных помещений",
+            help="Круговое - для большинства помещений; линейное - для стоянок и узких длинных помещений",
         )
         spread_type = "circular" if spread_type_label == "Круговое" else "linear"
         b_width = 1.0
@@ -216,7 +215,7 @@ def render_sidebar() -> None:
 
         if "tbl_result" in st.session_state:
             res = st.session_state["tbl_result"]
-            st.success(f"**tбл = {res['t_bl']} мин** — {res['limiting_factor']}")
+            st.success(f"**tбл = {res['t_bl']} мин** - {res['limiting_factor']}")
             st.caption(f"Свободный объём Vсв = {res['V_sw']} м³")
 
             factor_labels = {
@@ -230,7 +229,7 @@ def render_sidebar() -> None:
             rows = []
             for k, lbl in factor_labels.items():
                 val = res.get(k)
-                rows.append({"ОФП": lbl, "tкр (мин)": val if val is not None else "—"})
+                rows.append({"ОФП": lbl, "tкр (мин)": val if val is not None else "-"})
             import pandas as _pd
             st.dataframe(_pd.DataFrame(rows), hide_index=True, use_container_width=True)
 

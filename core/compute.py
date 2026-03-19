@@ -43,7 +43,7 @@ def compute_all(
         if c in df_grp.columns:
             df_grp[c] = pd.to_numeric(df_grp[c], errors="coerce").fillna(0.0)
 
-    # K_обн, K_СОУЭ, K_ПДЗ — 0 или 0.8 строго по №1140
+    # K_обн, K_СОУЭ, K_ПДЗ - 0 или 0.8 строго по №1140
     for col_bool, col_k in [
         ("ПС соответствует? (K_обн=0.8)", "K_обн,i"),
         ("СОУЭ соответствует? (K_СОУЭ=0.8)", "K_СОУЭ,i"),
@@ -54,13 +54,13 @@ def compute_all(
         else:
             df_scen[col_k] = 0.0
 
-    # P_пр — формула (5)
+    # P_пр - формула (5)
     if "t_пр,i (ч/сут)" in df_scen.columns:
         df_scen["P_пр,i"] = df_scen["t_пр,i (ч/сут)"].apply(p_presence)
     else:
         df_scen["P_пр,i"] = 0.5
 
-    # K_п.з — формула (7)
+    # K_п.з - формула (7)
     df_scen["K_п.з,i"] = df_scen.apply(
         lambda r: k_pz(r["K_обн,i"], r["K_СОУЭ,i"], r["K_ПДЗ,i"]),
         axis=1
@@ -77,7 +77,7 @@ def compute_all(
     if missing.any():
         df_rows = df_rows.loc[~missing].copy()
 
-    # P_э — формула (6)
+    # P_э - формула (6)
     df_rows["P_э,i,j"] = df_rows.apply(
         lambda r: p_evac(
             r["t_р,i,j (мин)"], r["t_бл,i (мин)"], r["t_н.э,i,j (мин)"], r["t_ск,i,j (мин)"]
@@ -85,7 +85,7 @@ def compute_all(
         axis=1
     )
 
-    # R_i,j — формула (4)
+    # R_i,j - формула (4)
     df_rows["R_i,j"] = df_rows.apply(
         lambda r: r_ij(
             r["Q_п,i (год⁻¹)"], r["K_ап,i"], r["P_пр,i"], r["P_э,i,j"], r["K_п.з,i"]
@@ -93,12 +93,12 @@ def compute_all(
         axis=1
     )
 
-    # R_i = max_j {R_i,j} — формула (3)
+    # R_i = max_j {R_i,j} - формула (3)
     agg = df_rows.groupby("Сценарий i", as_index=False).agg(
         **{"R_i = max_j(R_i,j)": ("R_i,j", "max")}
     )
 
-    # R = max_i {R_i} — формула (2)
+    # R = max_i {R_i} - формула (2)
     r_total = float(agg["R_i = max_j(R_i,j)"].max()) if len(agg) else 0.0
 
     agg["R <= R_норм?"] = agg["R_i = max_j(R_i,j)"].apply(

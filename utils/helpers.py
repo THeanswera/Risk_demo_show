@@ -1,5 +1,5 @@
 """
-Вспомогательные функции общего назначения.
+Функции общего назначения.
 """
 
 import math
@@ -10,12 +10,10 @@ import streamlit as st
 
 
 def clamp(x: float, lo: float, hi: float) -> float:
-    """Ограничить значение x диапазоном [lo, hi]."""
     return float(max(lo, min(hi, x)))
 
 
 def safe_float(x, default: float = 0.0) -> float:
-    """Безопасное преобразование в float; NaN/Inf заменяются на default."""
     try:
         v = float(x)
         if math.isnan(v) or math.isinf(v):
@@ -26,7 +24,6 @@ def safe_float(x, default: float = 0.0) -> float:
 
 
 def force_rerun() -> None:
-    """Принудительный перезапуск страницы Streamlit."""
     try:
         st.rerun()
     except Exception:
@@ -36,7 +33,6 @@ def force_rerun() -> None:
 def ensure_unique_positive_int_ids(
     df: pd.DataFrame, col: str, start_from: int = 1
 ) -> pd.DataFrame:
-    """Гарантировать уникальные положительные целые идентификаторы в столбце col."""
     df = df.copy()
     if col not in df.columns:
         df.insert(0, col, np.arange(start_from, start_from + len(df), dtype=int))
@@ -70,7 +66,6 @@ def ensure_unique_positive_int_ids(
 
 
 def fmt_sci(x, digits: int = 2) -> str:
-    """Форматировать число в научную нотацию."""
     try:
         v = float(x)
         if math.isnan(v) or math.isinf(v):
@@ -83,7 +78,6 @@ def fmt_sci(x, digits: int = 2) -> str:
 def format_df_scientific(
     df: pd.DataFrame, sci_cols: list, digits: int = 2
 ) -> pd.DataFrame:
-    """Применить научную нотацию к указанным столбцам DataFrame."""
     out = df.copy()
     for c in sci_cols:
         if c in out.columns:
@@ -91,7 +85,7 @@ def format_df_scientific(
     return out
 
 
-# Словарь красивых названий столбцов (внутреннее имя → отображаемое)
+# Словарь значений
 PRETTY: dict[str, str] = {
     "Сценарий i": "Сценарий i",
     "Тип здания": "Тип здания",
