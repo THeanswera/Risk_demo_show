@@ -2,6 +2,8 @@
 Шаг 3: учёт противопожарных дверей — формула (8), п. 48.
 """
 
+import math
+
 import streamlit as st
 
 from core.constants import P_DOOR_CLOSED, P_DOOR_OPEN
@@ -9,12 +11,8 @@ from core.formulas import r_i_with_doors
 
 
 def render_doors(r_total: float) -> float:
-    """
-    Отрисовать шаг 3 — блок противопожарных дверей.
-
-    Возвращает итоговый R с учётом дверей (или без — если флаг не выставлен).
-    """
-    st.subheader("📝 Шаг 3. Учёт противопожарных дверей — формула (8), п. 48")
+    
+    st.subheader("Учёт противопожарных дверей — формула (8), п. 48")
 
     use_fire_doors = st.checkbox(
         "Учитывать противопожарные двери на путях эвакуации",
@@ -37,24 +35,25 @@ def render_doors(r_total: float) -> float:
 
         dc1, dc2 = st.columns(2)
         with dc1:
-            r_open_input = st.number_input(
+            st.metric(
                 "Rᵢ (дверь открыта), год⁻¹",
-                min_value=0.0,
-                value=float(r_total),
-                format="%.2e",
-                key="r_door_open_input",
-                help="Значение R при открытой противопожарной двери.",
+                f"{r_total:.2e}",
+                help="Значение R при открытой противопожарной двери — берётся из расчёта выше.",
             )
+            r_open_input = r_total
         with dc2:
+            step = 10 ** (math.floor(math.log10(r_total)) - 1) if r_total > 0 else 1e-7
             r_closed_input = st.number_input(
                 "Rᵢ (дверь закрыта), год⁻¹",
                 min_value=0.0,
+                max_value=float(r_total),
                 value=0.0,
+                step=step,
                 format="%.2e",
                 key="r_door_closed_input",
                 help=(
                     "Значение R при закрытой противопожарной двери. "
-                    "ОФП через закрытую дверь не распространяются."
+                    "Опасные факторы пожара через закрытую дверь не распространяются."
                 ),
             )
 

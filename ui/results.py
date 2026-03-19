@@ -13,8 +13,7 @@ from visualization.gauge import risk_gauge_html
 
 def render_results(r_final: float, df_scen_calc: pd.DataFrame,
                    df_rows_calc: pd.DataFrame, df_agg: pd.DataFrame) -> None:
-    """Отрисовать шаг 4 — результаты расчёта и детализацию."""
-    st.subheader("📊 Шаг 4. Результаты расчёта — формулы (1)–(2)")
+    st.subheader(" Результаты расчёта — формулы (1)-(2)")
 
     passed = r_final <= R_NORM
 
@@ -31,15 +30,15 @@ def render_results(r_final: float, df_scen_calc: pd.DataFrame,
 
     components.html(risk_gauge_html(r_final, R_NORM), height=420, scrolling=False)
 
-    # ── Агрегирование по сценариям ───────────────────────────
-    st.subheader("📋 Детализация: агрегирование по сценариям — формулы (2)–(3)")
-    st.caption("Rᵢ = maxⱼ{Rᵢ,ⱼ} — формула (3); R = maxᵢ{Rᵢ} — формула (2)")
+    # Сводка по сценариям 
+    st.subheader("Сводная таблица ИПР по сценариям - формулы (2) и (3)")
+    st.caption("")
 
     df_agg_view = format_df_scientific(df_agg, sci_cols=["R_i = max_j(R_i,j)"], digits=2)
     st.dataframe(prettify_columns(df_agg_view), use_container_width=True)
 
-    # ── ИПР по группам ───────────────────────────────────────
-    st.subheader("📋 Детализация: ИПР по группам — формула (4)")
+    # ИПР по группам 
+    st.subheader("Сводная таблица ИПР по группам - формула (4)")
 
     cols_show = [
         "ID", "Сценарий i", "Группа j",
@@ -52,8 +51,8 @@ def render_results(r_final: float, df_scen_calc: pd.DataFrame,
     df_rows_view = format_df_scientific(df_rows_view, sci_cols=["R_i,j", "Q_п,i (год⁻¹)"], digits=2)
     st.dataframe(prettify_columns(df_rows_view), use_container_width=True)
 
-    # ── Коэффициенты по сценариям ────────────────────────────
-    st.subheader("📋 Детализация: коэффициенты по сценариям — формула (7)")
+    # Коэффициенты по сценариям 
+    st.subheader("Принятые коэффциенты по сценариям — формула (7)")
 
     cols_scen = [
         "Сценарий i", "Тип здания", "Q_п,i (год⁻¹)", "K_ап,i",
@@ -64,8 +63,8 @@ def render_results(r_final: float, df_scen_calc: pd.DataFrame,
     df_scen_view = format_df_scientific(df_scen_view, sci_cols=["Q_п,i (год⁻¹)"], digits=2)
     st.dataframe(prettify_columns(df_scen_view), use_container_width=True)
 
-    # ── Диагностика P_э ──────────────────────────────────────
-    st.subheader("🔍 Диагностика Pэ,ᵢ,ⱼ — формула (6)")
+    # Анализ P_э 
+    st.subheader("Расчет Pэ,ᵢ,ⱼ — формула (6)")
 
     sel_id = int(st.session_state.selected_group_id)
     if len(df_rows_calc) > 0 and "ID" in df_rows_calc.columns:

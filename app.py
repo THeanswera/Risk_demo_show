@@ -22,7 +22,6 @@ import streamlit as st
 
 st.set_page_config(
     page_title="Калькулятор ИПР по Приказу МЧС №1140",
-    page_icon="🔥",
     layout="wide",
 )
 

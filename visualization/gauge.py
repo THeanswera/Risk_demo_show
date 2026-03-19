@@ -1,5 +1,5 @@
 """
-Визуальная шкала ИПР (HTML-компонент для Streamlit).
+Визуальная шкала сравнения ИПР
 """
 
 import math
@@ -8,10 +8,7 @@ from utils.helpers import clamp
 
 
 def risk_gauge_html(r_value: float, r_norm: float) -> str:
-    """
-    Возвращает HTML с логарифмической шкалой ИПР и столбчатой диаграммой
-    сравнения R с R_норм.
-    """
+  
     r_value = float(r_value) if (r_value and r_value > 0) else 0.0
     r_norm = float(r_norm) if (r_norm and r_norm > 0) else 1e-12
 

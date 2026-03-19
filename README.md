@@ -34,7 +34,7 @@ core/
   formulas.py           # Формулы (4)–(8)
   tables.py             # Таблицы П3.1, П4.1
   compute.py            # Основная логика compute_all()
-  t_block.py            # Таблица П9.1 + расчёт tбл (Приложение 6)
+  t_block.py            # Таблица П9.1 + расчёт времени блокирования tбл (Приложение 6)
 ui/
   sidebar.py            # Боковая панель, расчёт tбл
   scenarios.py          # Шаг 1: сценарии
@@ -58,7 +58,3 @@ tests/
 ```bash
 pytest tests/ -v
 ```
-
-## Лицензия
-
-MIT

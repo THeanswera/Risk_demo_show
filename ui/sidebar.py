@@ -15,9 +15,9 @@ from utils.helpers import ensure_unique_positive_int_ids, force_rerun, safe_floa
 def render_sidebar() -> None:
     """Отрисовать боковую панель со справочниками, слайдерами и расчётом tбл."""
     with st.sidebar:
-        st.header("📋 Справочники и настройки")
+        st.header("Справочники и надстройки")
 
-        # ── Справочник Q_п ──────────────────────────────────────
+        # Справочник Q_п
         st.subheader("Частота пожара Qп,ᵢ")
         st.caption("Приложение 3, Таблица П3.1 (п. 15)")
         building_type = st.selectbox(
@@ -56,7 +56,7 @@ def render_sidebar() -> None:
 
         st.divider()
 
-        # ── Справочник t_нэ ─────────────────────────────────────
+        # Справочник t_нэ 
         st.subheader("Время начала эвакуации tн.э")
         st.caption("Приложение 4 (п. 35)")
 
@@ -92,7 +92,7 @@ def render_sidebar() -> None:
                 "Применить tн.э к группе", grp_labels_tne, key="target_grp_tne"
             )
 
-            if st.button("📥 Применить tн.э к группе", use_container_width=True):
+            if st.button("Применить время начала эвакуации (tн.э) к группе", use_container_width=True):
                 sel_idx_tne = grp_labels_tne.index(target_grp_tne)
                 grp_id_tne = int(df_grp_sidebar.iloc[sel_idx_tne]["ID"])
                 grp_df = st.session_state.df_grp.copy()
@@ -105,7 +105,7 @@ def render_sidebar() -> None:
 
         st.divider()
 
-        # ── Слайдеры временных параметров ───────────────────────
+        # Слайдеры временных параметров
         st.subheader("Временные параметры")
         st.caption("Настройка для выбранной группы через слайдеры")
 

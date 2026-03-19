@@ -90,7 +90,7 @@ def generate_report_docx(
                         run.font.name = "Times New Roman"
                         run.font.size = Pt(11)
 
-    # ── Титульный раздел ────────────────────────────────────
+    # Титульный раздел
     title = doc.add_paragraph()
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
     run_title = title.add_run(
@@ -103,7 +103,7 @@ def generate_report_docx(
 
     doc.add_paragraph()
 
-    # ── Раздел 1: Исходные данные ───────────────────────────
+    # Раздел 1: Исходные данные 
     _add_heading("1. Исходные данные", level=1)
 
     _add_heading("1.1. Сценарии пожара", level=2)
@@ -141,7 +141,7 @@ def generate_report_docx(
         ])
     _add_table(grp_headers, grp_rows)
 
-    # ── Раздел 2: K_п.з ─────────────────────────────────────
+    # Раздел 2: K_п.з
     doc.add_paragraph()
     _add_heading("2. Расчёт коэффициентов противопожарной защиты — формула (7)", level=1)
 
@@ -171,7 +171,7 @@ def generate_report_docx(
     doc.add_paragraph()
     _add_table(["Сценарий i", "Kобн", "Kсоуэ", "Kпдз", "Kп.з"], kpz_rows)
 
-    # ── Раздел 3: P_пр ──────────────────────────────────────
+    #  Раздел 3: P_пр
     doc.add_paragraph()
     _add_heading("3. Расчёт вероятности присутствия — формула (5)", level=1)
 
@@ -181,7 +181,7 @@ def generate_report_docx(
         p_pr = safe_float(r.get("P_пр,i", 0))
         _add_para(f"Pпр,{si} = tпр,{si} / 24 = {t_pr:.1f} / 24 = {p_pr:.4f}")
 
-    # ── Раздел 4: P_э ───────────────────────────────────────
+    # ── Раздел 4: P_э
     doc.add_paragraph()
     _add_heading("4. Расчёт вероятности эвакуации — формула (6)", level=1)
 
@@ -215,7 +215,7 @@ def generate_report_docx(
         else:
             _add_para(f"  tр ≥ 0.8·tбл → Pэ = 0.000")
 
-    # ── Раздел 5: R_i,j ─────────────────────────────────────
+    #  Раздел 5: R_i,j 
     doc.add_paragraph()
     _add_heading("5. Расчёт ИПР по группам — формула (4)", level=1)
 
@@ -240,7 +240,7 @@ def generate_report_docx(
     doc.add_paragraph()
     _add_table(["ID", "Сценарий i", "Группа j", "Ri,j"], rij_table_rows)
 
-    # ── Раздел 6: R_i, R ────────────────────────────────────
+    #  Раздел 6: R_i, R 
     doc.add_paragraph()
     _add_heading("6. Определение расчётной величины ИПР — формулы (2)–(3)", level=1)
 
@@ -255,7 +255,7 @@ def generate_report_docx(
 
     _add_para(f"R = max{{Ri}} = {r_total:.3e} год⁻¹", bold=True)
 
-    # ── Раздел 7: Двери ─────────────────────────────────────
+    #  Раздел 7: Двери
     if use_fire_doors:
         doc.add_paragraph()
         _add_heading("7. Учёт противопожарных дверей — формула (8)", level=1)
@@ -267,7 +267,7 @@ def generate_report_docx(
             f"{r_final:.3e} год⁻¹"
         )
 
-    # ── Раздел 8: Заключение ────────────────────────────────
+    #тРаздел 8: Заключение
     sec_num = 8 if use_fire_doors else 7
     doc.add_paragraph()
     _add_heading(f"{sec_num}. Заключение", level=1)
@@ -293,7 +293,7 @@ def generate_report_docx(
             "нормативное значение. Требуется разработка мероприятий по снижению пожарного риска."
         )
 
-    # ── Сохранение в bytes ──────────────────────────────────
+    #  Сохранение в bytes
     buf = io.BytesIO()
     doc.save(buf)
     buf.seek(0)
