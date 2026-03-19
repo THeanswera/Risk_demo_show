@@ -77,6 +77,8 @@ if "r_door_open" not in st.session_state:
     st.session_state.r_door_open = 0.0
 if "r_door_closed" not in st.session_state:
     st.session_state.r_door_closed = 0.0
+if "r_door_closed_input" not in st.session_state:
+    st.session_state.r_door_closed_input = 0.0
 
 st.session_state.df_grp = ensure_unique_positive_int_ids(
     st.session_state.df_grp, "ID", start_from=1

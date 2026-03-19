@@ -46,8 +46,6 @@ def render_doors(r_total: float) -> float:
             r_closed_input = st.number_input(
                 "Rᵢ (дверь закрыта), год⁻¹",
                 min_value=0.0,
-                max_value=float(r_total),
-                value=0.0,
                 step=step,
                 format="%.2e",
                 key="r_door_closed_input",
