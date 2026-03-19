@@ -17,6 +17,8 @@
   utils/      - вспомогательные функции
 """
 
+import io
+
 import pandas as pd
 import streamlit as st
 
@@ -127,27 +129,21 @@ render_reference()
 
 st.subheader("💾 Выгрузка результатов")
 
-csv_rows = df_rows_calc.to_csv(index=False).encode("utf-8-sig")
-csv_scen = df_scen_calc.to_csv(index=False).encode("utf-8-sig")
-csv_agg = df_agg.to_csv(index=False).encode("utf-8-sig")
+xlsx_buf = io.BytesIO()
+with pd.ExcelWriter(xlsx_buf, engine="openpyxl") as writer:
+    df_agg.to_excel(writer, sheet_name="Итог", index=False)
+    df_rows_calc.to_excel(writer, sheet_name="Группы", index=False)
+    df_scen_calc.to_excel(writer, sheet_name="Сценарии", index=False)
+xlsx_bytes = xlsx_buf.getvalue()
 
-c1, c2, c3, c4 = st.columns(4)
+c1, c2 = st.columns(2)
 with c1:
     st.download_button(
-        "CSV: группы (построчно)", data=csv_rows,
-        file_name="ipr_groups.csv", mime="text/csv",
+        "Скачать Excel (3 листа)", data=xlsx_bytes,
+        file_name="ipr_results.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
 with c2:
-    st.download_button(
-        "CSV: сценарии (коэффициенты)", data=csv_scen,
-        file_name="ipr_scenarios.csv", mime="text/csv",
-    )
-with c3:
-    st.download_button(
-        "CSV: агрегирование (итог)", data=csv_agg,
-        file_name="ipr_aggregate.csv", mime="text/csv",
-    )
-with c4:
     try:
         docx_bytes = generate_report_docx(
             df_scen=st.session_state.df_scen,
