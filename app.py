@@ -6,12 +6,15 @@
 в зданиях, сооружениях и пожарных отсеках различных классов
 функциональной пожарной опасности.
 
-Реализованы формулы (1)–(8) методики, справочные таблицы
+Реализованы формулы (1)–(7) методики, справочные таблицы
 из Приложений 3, 4, 9.
+
+Примечание: учёт противопожарных дверей по п. 48 (формула 8)
+НЕ реализован — пользователь моделирует через отдельные сценарии.
 
 Структура проекта:
   core/       - константы, формулы, таблицы, расчёт tбл
-  ui/         - Streamlit-интерфейс (шаги 1–4, справочники)
+  ui/         - Streamlit-интерфейс (шаги 1–3, справочники)
   export/     - генерация Word-отчёта
   visualization/ - HTML-компоненты (шкала риска)
   utils/      - вспомогательные функции
@@ -32,7 +35,6 @@ from core.compute import compute_all  # noqa: E402
 from ui.sidebar import render_sidebar  # noqa: E402
 from ui.scenarios import render_scenarios  # noqa: E402
 from ui.groups import render_groups  # noqa: E402
-from ui.doors import render_doors  # noqa: E402
 from ui.results import render_results  # noqa: E402
 from ui.reference import render_reference  # noqa: E402
 from export.report_docx import generate_report_docx  # noqa: E402
@@ -71,14 +73,6 @@ if "df_scen" not in st.session_state:
     st.session_state.df_scen = default_scenarios.copy()
 if "df_grp" not in st.session_state:
     st.session_state.df_grp = default_groups.copy()
-if "use_fire_doors" not in st.session_state:
-    st.session_state.use_fire_doors = False
-if "r_door_open" not in st.session_state:
-    st.session_state.r_door_open = 0.0
-if "r_door_closed" not in st.session_state:
-    st.session_state.r_door_closed = 0.0
-if "r_door_closed_input" not in st.session_state:
-    st.session_state.r_door_closed_input = 0.0
 
 st.session_state.df_grp = ensure_unique_positive_int_ids(
     st.session_state.df_grp, "ID", start_from=1
@@ -93,7 +87,7 @@ if "selected_group_id" not in st.session_state:
 # Заголовок
 st.title("Калькулятор индивидуального пожарного риска")
 st.caption(
-    "По приказу МЧС России от 14 ноября 2022 г. № 1140 “Об утверждении методики определения расчетных величин пожарного риска в зданиях, сооружениях и пожарных отсеках различных классов функциональной пожарной опасности”"
+    "По приказу МЧС России от 14 ноября 2022 г. № 1140 \u201cОб утверждении методики определения расчетных величин пожарного риска в зданиях, сооружениях и пожарных отсеках различных классов функциональной пожарной опасности\u201d"
 )
 
 # Боковая панель
@@ -114,13 +108,17 @@ df_scen_calc, df_rows_calc, df_agg, r_total = compute_all(
     st.session_state.df_grp,
 )
 
-# Шаг 3: Противопожарные двери
+# Шаг 3: Результаты
 
-r_final = render_doors(r_total)
+render_results(r_total, df_scen_calc, df_rows_calc, df_agg)
 
-# Шаг 4: Результаты
-
-render_results(r_final, df_scen_calc, df_rows_calc, df_agg)
+# Примечание о противопожарных дверях
+st.info(
+    "Учёт противопожарных дверей по п. 48 Методики (формула 8) реализуется вручную "
+    "через создание отдельных сценариев с разными значениями tбл "
+    "(дверь открыта / дверь закрыта).",
+    icon="ℹ️",
+)
 
 # Справочные таблицы и формулы
 
@@ -128,7 +126,7 @@ render_reference()
 
 # Выгрузка результатов
 
-st.subheader("💾 Выгрузка результатов")
+st.subheader("Выгрузка результатов")
 
 xlsx_buf = io.BytesIO()
 with pd.ExcelWriter(xlsx_buf, engine="openpyxl") as writer:
@@ -153,8 +151,6 @@ with c2:
             df_rows_calc=df_rows_calc,
             df_agg=df_agg,
             r_total=r_total,
-            r_final=r_final,
-            use_fire_doors=st.session_state.use_fire_doors,
         )
         st.download_button(
             "Скачать отчёт (Word)",

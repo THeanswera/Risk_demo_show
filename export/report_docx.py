@@ -4,14 +4,10 @@
 """
 
 import io
-from typing import Optional
 
 import pandas as pd
 
-from core.constants import (
-    K_AP_VALUE, K_STD, P_DOOR_CLOSED, P_DOOR_OPEN, R_NORM
-)
-from core.formulas import k_pz, p_evac, p_presence
+from core.constants import R_NORM
 from utils.helpers import safe_float
 
 
@@ -22,8 +18,6 @@ def generate_report_docx(
     df_rows_calc: pd.DataFrame,
     df_agg: pd.DataFrame,
     r_total: float,
-    r_final: float,
-    use_fire_doors: bool = False,
 ) -> bytes:
     """
     Генерирует Word-документ с полным примером расчёта ИПР.
@@ -35,9 +29,7 @@ def generate_report_docx(
     df_scen_calc  : сценарии с расчётными коэффициентами
     df_rows_calc  : результаты расчёта по группам
     df_agg        : агрегирование по сценариям
-    r_total       : расчётная величина ИПР без учёта дверей
-    r_final       : итоговая величина ИПР (с учётом дверей если применимо)
-    use_fire_doors: флаг использования формулы (8)
+    r_total       : расчётная величина ИПР
 
     Возвращает
     ----------
@@ -45,7 +37,7 @@ def generate_report_docx(
     """
     try:
         from docx import Document
-        from docx.shared import Pt, RGBColor
+        from docx.shared import Pt
         from docx.enum.text import WD_ALIGN_PARAGRAPH
     except ImportError as exc:
         raise ImportError(
@@ -54,7 +46,7 @@ def generate_report_docx(
 
     doc = Document()
 
-    # Настройка стилей 
+    # Настройка стилей
     style_normal = doc.styles["Normal"]
     style_normal.font.name = "Times New Roman"
     style_normal.font.size = Pt(12)
@@ -103,23 +95,29 @@ def generate_report_docx(
 
     doc.add_paragraph()
 
-    # Раздел 1: Исходные данные 
+    # Раздел 1: Исходные данные
     _add_heading("1. Исходные данные", level=1)
 
     _add_heading("1.1. Сценарии пожара", level=2)
     scen_headers = [
         "Сценарий i", "Тип здания", "Qп (год⁻¹)", "tпр (ч/сут)",
-        "tбл (мин)", "Kап", "ПС", "СОУЭ", "ПДЗ",
+        "tбл (мин)", "АУП", "ПС", "СОУЭ", "ПДЗ",
     ]
     scen_rows = []
     for _, r in df_scen.iterrows():
+        # ИСПРАВЛЕНО: K_ап теперь бинарный (п. 15 Методики №1140)
+        k_ap_val = safe_float(r.get("K_ап,i", 0))
+        if "АУП соответствует? (K_ап=0.9)" in r.index:
+            k_ap_display = "Да" if r.get("АУП соответствует? (K_ап=0.9)", False) else "Нет"
+        else:
+            k_ap_display = "Да" if k_ap_val >= 0.9 else "Нет"
         scen_rows.append([
             int(r.get("Сценарий i", 0)),
             r.get("Тип здания", ""),
             f"{safe_float(r.get('Q_п,i (год⁻¹)', 0)):.3e}",
             f"{safe_float(r.get('t_пр,i (ч/сут)', 0)):.1f}",
             f"{safe_float(r.get('t_бл,i (мин)', 0)):.2f}",
-            f"{safe_float(r.get('K_ап,i', 0)):.2f}",
+            k_ap_display,
             "Да" if r.get("ПС соответствует? (K_обн=0.8)", False) else "Нет",
             "Да" if r.get("СОУЭ соответствует? (K_СОУЭ=0.8)", False) else "Нет",
             "Да" if r.get("ПДЗ соответствует? (K_ПДЗ=0.8)", False) else "Нет",
@@ -162,8 +160,8 @@ def generate_report_docx(
         _add_para(f"  Kсоуэ,{si} = {k_soue_str}")
         _add_para(f"  Kпдз,{si} = {k_pdz_str}")
         formula_str = (
-            f"  Kп.з,{si} = 1 - (1 - {k_obn:.1f}×{k_soue:.1f}) × (1 - {k_obn:.1f}×{k_pdz:.1f}) "
-            f"= 1 - (1 - {k_obn*k_soue:.4f}) × (1 - {k_obn*k_pdz:.4f}) = {k_pz_val:.4f}"
+            f"  Kп.з,{si} = 1 - (1 - {k_obn:.1f}\u00d7{k_soue:.1f}) \u00d7 (1 - {k_obn:.1f}\u00d7{k_pdz:.1f}) "
+            f"= 1 - (1 - {k_obn*k_soue:.4f}) \u00d7 (1 - {k_obn*k_pdz:.4f}) = {k_pz_val:.4f}"
         )
         _add_para(formula_str)
         kpz_rows.append([si, f"{k_obn:.1f}", f"{k_soue:.1f}", f"{k_pdz:.1f}", f"{k_pz_val:.4f}"])
@@ -171,7 +169,7 @@ def generate_report_docx(
     doc.add_paragraph()
     _add_table(["Сценарий i", "Kобн", "Kсоуэ", "Kпдз", "Kп.з"], kpz_rows)
 
-    #  Раздел 3: P_пр
+    # Раздел 3: P_пр
     doc.add_paragraph()
     _add_heading("3. Расчёт вероятности присутствия - формула (5)", level=1)
 
@@ -196,28 +194,28 @@ def generate_report_docx(
         p_e = safe_float(r.get("P_э,i,j", 0))
         border = 0.8 * t_bl
 
-        _add_para(f"ID {row_id} - Сценарий {si}, Группа «{grp}»:")
-        _add_para(f"  0.8 × tбл = 0.8 × {t_bl:.2f} = {border:.2f} мин")
+        _add_para(f"ID {row_id} - Сценарий {si}, Группа \u00ab{grp}\u00bb:")
+        _add_para(f"  0.8 \u00d7 tбл = 0.8 \u00d7 {t_bl:.2f} = {border:.2f} мин")
         _add_para(f"  tр + tн.э = {t_p:.2f} + {t_ne:.2f} = {t_p + t_ne:.2f} мин")
         _add_para(f"  tск = {t_ck:.2f} мин")
 
         # ИСПРАВЛЕНО: диагностика Pэ по п. 17 Методики №1140
         t_sum = t_p + t_ne
         if t_ck > 6.0:
-            _add_para(f"  tск > 6 мин → Pэ = 0.000")
+            _add_para(f"  tск > 6 мин \u2192 Pэ = 0.000")
         elif t_sum < border:
             _add_para(
-                f"  {t_sum:.2f} < {border:.2f} и tск = {t_ck:.2f} ≤ 6 → Pэ = 0.999"
+                f"  {t_sum:.2f} < {border:.2f} и tск = {t_ck:.2f} \u2264 6 \u2192 Pэ = 0.999"
             )
         elif t_sum >= t_bl:
-            _add_para(f"  tр + tн.э = {t_sum:.2f} ≥ tбл = {t_bl:.2f} → Pэ = 0.000")
+            _add_para(f"  tр + tн.э = {t_sum:.2f} \u2265 tбл = {t_bl:.2f} \u2192 Pэ = 0.000")
         else:
             _add_para(
                 f"  Промежуточная ветвь: "
-                f"Pэ = 1 − (tр + tн.э) / tбл = 1 − {t_sum:.2f} / {t_bl:.2f} = {p_e:.4f}"
+                f"Pэ = 1 \u2212 (tр + tн.э) / tбл = 1 \u2212 {t_sum:.2f} / {t_bl:.2f} = {p_e:.4f}"
             )
 
-    #  Раздел 5: R_i,j 
+    # Раздел 5: R_i,j
     doc.add_paragraph()
     _add_heading("5. Расчёт ИПР по группам - формула (4)", level=1)
 
@@ -234,17 +232,17 @@ def generate_report_docx(
         r_val = safe_float(r.get("R_i,j", 0))
 
         _add_para(
-            f"R{si},{row_id} = {q_p:.2e} × (1 - {k_ap:.2f}) × {p_pr:.4f} × "
-            f"(1 - {p_e:.4f}) × (1 - {k_pz_val:.4f}) = {r_val:.3e}"
+            f"R{si},{row_id} = {q_p:.2e} \u00d7 (1 - {k_ap:.2f}) \u00d7 {p_pr:.4f} \u00d7 "
+            f"(1 - {p_e:.4f}) \u00d7 (1 - {k_pz_val:.4f}) = {r_val:.3e}"
         )
         rij_table_rows.append([row_id, si, grp, f"{r_val:.3e}"])
 
     doc.add_paragraph()
     _add_table(["ID", "Сценарий i", "Группа j", "Ri,j"], rij_table_rows)
 
-    #  Раздел 6: R_i, R 
+    # Раздел 6: R_i, R
     doc.add_paragraph()
-    _add_heading("6. Определение расчётной величины ИПР - формулы (2)–(3)", level=1)
+    _add_heading("6. Определение расчётной величины ИПР - формулы (2)\u2013(3)", level=1)
 
     for _, r in df_agg.iterrows():
         si = r.get("Сценарий i", "")
@@ -253,34 +251,21 @@ def generate_report_docx(
             continue
         r_vals = df_rows_calc.loc[df_rows_calc["Сценарий i"].astype(str) == str(si), "R_i,j"]
         vals_str = ", ".join(f"{v:.3e}" for v in r_vals.tolist())
-        _add_para(f"R{si} = max{{{vals_str}}} = {r_i:.3e} год⁻¹")
+        _add_para(f"R{si} = max{{{vals_str}}} = {r_i:.3e} год\u207b\u00b9")
 
-    _add_para(f"R = max{{Ri}} = {r_total:.3e} год⁻¹", bold=True)
+    _add_para(f"R = max{{Ri}} = {r_total:.3e} год\u207b\u00b9", bold=True)
 
-    #  Раздел 7: Двери
-    if use_fire_doors:
-        doc.add_paragraph()
-        _add_heading("7. Учёт противопожарных дверей - формула (8)", level=1)
-        r_open_val = r_total
-        r_closed_val = 0.0
-        _add_para(
-            f"R = {P_DOOR_OPEN} × R(откр) + {P_DOOR_CLOSED} × R(закр) = "
-            f"{P_DOOR_OPEN} × {r_open_val:.3e} + {P_DOOR_CLOSED} × {r_closed_val:.3e} = "
-            f"{r_final:.3e} год⁻¹"
-        )
-
-    #тРаздел 8: Заключение
-    sec_num = 8 if use_fire_doors else 7
+    # Раздел 7: Заключение
     doc.add_paragraph()
-    _add_heading(f"{sec_num}. Заключение", level=1)
+    _add_heading("7. Заключение", level=1)
 
-    passed = r_final <= R_NORM
+    passed = r_total <= R_NORM
     verdict = "ВЫПОЛНЕНО" if passed else "НЕ ВЫПОЛНЕНО"
 
-    _add_para(f"R = {r_final:.3e} год⁻¹", bold=True)
-    _add_para(f"Rнорм = {R_NORM:.1e} год⁻¹")
+    _add_para(f"R = {r_total:.3e} год\u207b\u00b9", bold=True)
+    _add_para(f"Rнорм = {R_NORM:.1e} год\u207b\u00b9")
     _add_para(
-        f"R {'≤' if passed else '>'} Rнорм - условие формулы (1) {verdict}",
+        f"R {'\u2264' if passed else '>'} Rнорм - условие формулы (1) {verdict}",
         bold=True,
     )
 
@@ -295,7 +280,7 @@ def generate_report_docx(
             "нормативное значение. Требуется разработка мероприятий по снижению пожарного риска."
         )
 
-    #  Сохранение в bytes
+    # Сохранение в bytes
     buf = io.BytesIO()
     doc.save(buf)
     buf.seek(0)

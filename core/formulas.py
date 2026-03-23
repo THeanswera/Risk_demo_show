@@ -1,5 +1,5 @@
 from utils.helpers import clamp, safe_float
-from core.constants import P_E_MAX, K_MAX, K_AP_VALUE, P_DOOR_OPEN, P_DOOR_CLOSED
+from core.constants import P_E_MAX, K_MAX, K_AP_VALUE
 
 
 def p_presence(t_pr_hours: float) -> float:
@@ -77,14 +77,6 @@ def r_ij(q_p: float, k_ap: float, p_pr: float, p_e: float, k_pz_val: float) -> f
     val = q_p * (1.0 - k_ap) * p_pr * (1.0 - p_e) * (1.0 - k_pz_val)
     return max(0.0, float(val))
 
-
-def r_i_with_doors(r_open: float, r_closed: float) -> float:
-    """
-    Формула (8) №1140 - учёт противопожарных дверей (п. 48).
-    R_i = P_откр · R_i(откр) + P_закр · R_i(закр)
-    P_откр = 0.3, P_закр = 0.7
-    """
-    return P_DOOR_OPEN * safe_float(r_open) + P_DOOR_CLOSED * safe_float(r_closed)
 
 
 def t_ne_formula(f_pom: float) -> float:
