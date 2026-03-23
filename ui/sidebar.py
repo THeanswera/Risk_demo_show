@@ -14,7 +14,7 @@ from utils.helpers import ensure_unique_positive_int_ids, force_rerun, safe_floa
 
 def render_sidebar() -> None:
     with st.sidebar:
-        st.header("Настройки параметров и справочники")
+        st.title("Настройки параметров и справочники")
 
         # Справочник Q_п
         st.subheader("Определение частоты пожара (Qп,ᵢ)")
@@ -22,7 +22,7 @@ def render_sidebar() -> None:
         building_type = st.selectbox(
             "Тип здания",
             list(FIRE_FREQ_TABLE.keys()),
-            index=list(FIRE_FREQ_TABLE.keys()).index("Иное (Q_п = 4·10⁻²)"),
+            index=list(FIRE_FREQ_TABLE.keys()).index("Иное (Qп = 4·10⁻²)"),
             key="building_type_select",
         )
         q_p_ref = FIRE_FREQ_TABLE[building_type]
@@ -42,7 +42,7 @@ def render_sidebar() -> None:
 
         target_scen_qp = st.selectbox("Применить к сценарию №", scen_ids_for_qp, key="target_scen_qp")
 
-        if st.button(f"📥 Применить Qп к сценарию {target_scen_qp}", use_container_width=True):
+        if st.button(f" Применить Qп к сценарию {target_scen_qp}", use_container_width=True):
             df = st.session_state.df_scen.copy()
             df["Сценарий i"] = pd.to_numeric(df["Сценарий i"], errors="coerce").fillna(0).astype(int)
             mask = df["Сценарий i"] == int(target_scen_qp)

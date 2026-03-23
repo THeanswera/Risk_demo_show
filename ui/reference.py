@@ -68,7 +68,7 @@ P_{\text{э},i,j} =
         df_freq = pd.DataFrame([
             {"№": i + 1, "Наименование здания": k, "Qп (год⁻¹)": v}
             for i, (k, v) in enumerate(FIRE_FREQ_TABLE.items())
-            if k != "Иное (Q_п = 4·10⁻²)"
+            if k != "Иное (Qп = 4·10⁻²)"
         ])
         df_freq = format_df_scientific(df_freq, sci_cols=["Qп (год⁻¹)"], digits=2)
         st.dataframe(df_freq, use_container_width=True, hide_index=True)
