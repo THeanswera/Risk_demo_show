@@ -52,7 +52,7 @@ def render_results(r_final: float, df_scen_calc: pd.DataFrame,
     st.dataframe(prettify_columns(df_rows_view), use_container_width=True)
 
     # Коэффициенты по сценариям 
-    st.subheader("Принятые коэффциенты по сценариям - формула (7)")
+    st.subheader("Принятые коэффициенты по сценариям - формула (7)")
 
     cols_scen = [
         "Сценарий i", "Тип здания", "Q_п,i (год⁻¹)", "K_ап,i",

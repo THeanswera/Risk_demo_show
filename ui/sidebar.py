@@ -76,7 +76,8 @@ def render_sidebar() -> None:
                 "Площадь помещения Fпом (м²)", min_value=1.0, value=100.0, step=10.0
             )
             t_ne_ref = t_ne_formula(f_pom)
-            st.metric("tн.э (мин) = (5 + 0.01·Fпом)", f"{t_ne_ref:.3f}")
+            # ИСПРАВЛЕНО: формула П4.1 даёт секунды, переводим в минуты
+            st.metric("tн.э (мин) = (5 + 0.01·Fпом) / 60", f"{t_ne_ref:.3f}")
             st.caption(f"= {t_ne_ref * 60:.1f} секунд")
 
         df_grp_sidebar = st.session_state.df_grp.copy()
