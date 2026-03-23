@@ -17,7 +17,7 @@ def render_sidebar() -> None:
         st.title("Настройки параметров и справочники")
 
         # Справочник Q_п
-        st.subheader("Определение частоты пожара (Qп,ᵢ)")
+        st.subheader("Определение частоты пожара (Q_п,ᵢ)")
         st.caption("Приложение 3, Таблица П3.1")
         building_type = st.selectbox(
             "Тип здания",
@@ -42,7 +42,7 @@ def render_sidebar() -> None:
 
         target_scen_qp = st.selectbox("Применить к сценарию №", scen_ids_for_qp, key="target_scen_qp")
 
-        if st.button(f" Применить Qп к сценарию {target_scen_qp}", use_container_width=True):
+        if st.button(f"Применить Qп к сценарию {target_scen_qp}", use_container_width=True):
             df = st.session_state.df_scen.copy()
             df["Сценарий i"] = pd.to_numeric(df["Сценарий i"], errors="coerce").fillna(0).astype(int)
             mask = df["Сценарий i"] == int(target_scen_qp)
