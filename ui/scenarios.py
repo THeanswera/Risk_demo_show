@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-from core.constants import K_STD
+from core.constants import K_AP_VALUE, K_STD
 from core.tables import FIRE_FREQ_TABLE
 from utils.helpers import force_rerun
 
@@ -53,7 +53,7 @@ def render_scenarios() -> None:
                 "Q_п,i (год⁻¹)": 4.0e-2,
                 "t_пр,i (ч/сут)": 12.0,
                 "t_бл,i (мин)": 12.0,
-                "K_ап,i": 0.9,
+                "АУП соответствует? (K_ап=0.9)": True,
                 "ПС соответствует? (K_обн=0.8)": True,
                 "СОУЭ соответствует? (K_СОУЭ=0.8)": True,
                 "ПДЗ соответствует? (K_ПДЗ=0.8)": True,
@@ -89,21 +89,23 @@ def render_scenarios() -> None:
     )
     df_scen_preview = df_scen_preview.loc[df_scen_preview["Сценарий i"] > 0].copy()
 
-    for col_bool, col_k in [
-        ("ПС соответствует? (K_обн=0.8)", "K_обн (расч.)"),
-        ("СОУЭ соответствует? (K_СОУЭ=0.8)", "K_СОУЭ (расч.)"),
-        ("ПДЗ соответствует? (K_ПДЗ=0.8)", "K_ПДЗ (расч.)"),
+    # ИСПРАВЛЕНО: K_ап строго 0 или 0.9 (п. 15 Методики №1140)
+    for col_bool, col_k, k_val in [
+        ("АУП соответствует? (K_ап=0.9)", "K_ап (расч.)", K_AP_VALUE),
+        ("ПС соответствует? (K_обн=0.8)", "K_обн (расч.)", K_STD),
+        ("СОУЭ соответствует? (K_СОУЭ=0.8)", "K_СОУЭ (расч.)", K_STD),
+        ("ПДЗ соответствует? (K_ПДЗ=0.8)", "K_ПДЗ (расч.)", K_STD),
     ]:
         if col_bool in df_scen_preview.columns:
             df_scen_preview[col_k] = df_scen_preview[col_bool].astype(bool).map(
-                lambda x: K_STD if x else 0.0
+                {True: k_val, False: 0.0}
             )
 
     df_scen_edit = st.data_editor(
         df_scen_preview,
         num_rows="dynamic",
         use_container_width=True,
-        disabled=["K_обн (расч.)", "K_СОУЭ (расч.)", "K_ПДЗ (расч.)"],
+        disabled=["K_ап (расч.)", "K_обн (расч.)", "K_СОУЭ (расч.)", "K_ПДЗ (расч.)"],
         column_config={
             "Сценарий i": st.column_config.NumberColumn("Сценарий i", min_value=1, step=1),
             "Тип здания": st.column_config.SelectboxColumn(
@@ -116,12 +118,11 @@ def render_scenarios() -> None:
             "t_бл,i (мин)": st.column_config.NumberColumn(
                 "tбл,ᵢ (мин)", format="%.2f", min_value=0.1
             ),
-            "K_ап,i": st.column_config.NumberColumn(
-                "Kап,ᵢ", format="%.2f", min_value=0.0, max_value=0.9
-            ),
+            "АУП соответствует? (K_ап=0.9)": st.column_config.CheckboxColumn("АУП (Kап)"),
             "ПС соответствует? (K_обн=0.8)": st.column_config.CheckboxColumn("ПС (Kобн)"),
             "СОУЭ соответствует? (K_СОУЭ=0.8)": st.column_config.CheckboxColumn("СОУЭ (Kсоуэ)"),
             "ПДЗ соответствует? (K_ПДЗ=0.8)": st.column_config.CheckboxColumn("ПДЗ (Kпдз)"),
+            "K_ап (расч.)": st.column_config.NumberColumn("Kап (расч.)"),
             "K_обн (расч.)": st.column_config.NumberColumn("Kобн (расч.)"),
             "K_СОУЭ (расч.)": st.column_config.NumberColumn("Kсоуэ (расч.)"),
             "K_ПДЗ (расч.)": st.column_config.NumberColumn("Kпдз (расч.)"),
@@ -129,7 +130,7 @@ def render_scenarios() -> None:
         key="editor_scenarios",
     )
 
-    drop_cols = ["K_обн (расч.)", "K_СОУЭ (расч.)", "K_ПДЗ (расч.)"]
+    drop_cols = ["K_ап (расч.)", "K_обн (расч.)", "K_СОУЭ (расч.)", "K_ПДЗ (расч.)"]
     df_scen_store = df_scen_edit.drop(
         columns=[c for c in drop_cols if c in df_scen_edit.columns], errors="ignore"
     ).copy()

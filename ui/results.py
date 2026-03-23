@@ -87,13 +87,18 @@ def render_results(r_final: float, df_scen_calc: pd.DataFrame,
 
         st.metric("Pэ,ᵢ,ⱼ", f"{safe_float(row.get('P_э,i,j', 0.0)):.4f}")
 
+        # ИСПРАВЛЕНО: диагностика Pэ по п. 17 Методики №1140
+        t_sum = t_p + t_ne
         if t_ck > 6:
             st.warning("tск > 6 мин → по формуле (6): Pэ = 0")
-        elif (t_p + t_ne) <= border:
-            st.success("tр + tн.э ≤ 0.8·tбл и tск ≤ 6 → Pэ = 0.999")
-        elif (t_p < border) and (border < (t_p + t_ne)):
-            st.info("0.8·tбл попадает между tр и tр + tн.э → промежуточное значение (ветвь 1 формулы 6)")
+        elif t_sum < border:
+            st.success("tр + tн.э < 0.8·tбл и tск ≤ 6 → Pэ = 0.999")
+        elif t_sum >= t_bl:
+            st.warning("tр + tн.э ≥ tбл → по формуле (6): Pэ = 0")
         else:
-            st.warning("tр ≥ 0.8·tбл → по формуле (6): Pэ = 0")
+            st.info(
+                f"0.8·tбл ≤ tр + tн.э < tбл → Pэ = 1 − (tр + tн.э)/tбл "
+                f"= 1 − {t_sum:.3f}/{t_bl:.3f} = {1 - t_sum/t_bl:.4f}"
+            )
     else:
         st.info("Нет строк групп для диагностики.")

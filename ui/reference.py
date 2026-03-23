@@ -33,16 +33,17 @@ def render_reference() -> None:
         st.markdown("**Формула (5) - вероятность присутствия (п. 16):**")
         st.latex(r"P_{\text{пр},i} = \frac{t_{\text{пр},i}}{24}")
 
+        # ИСПРАВЛЕНО: формула (6) по п. 17 Методики №1140
         st.markdown("**Формула (6) - вероятность эвакуации (п. 17):**")
         st.latex(r"""
 P_{\text{э},i,j} =
 \begin{cases}
-0{,}999 \cdot \dfrac{0{,}8 \, t_{\text{бл},i} - t_{\text{р},i,j}}{t_{\text{н.э},i,j}},
-  & t_{\text{р},i,j} < 0{,}8 \, t_{\text{бл},i} < t_{\text{р},i,j} + t_{\text{н.э},i,j},\ t_{\text{ск}} \le 6 \\[6pt]
 0{,}999,
-  & t_{\text{р},i,j} + t_{\text{н.э},i,j} \le 0{,}8 \, t_{\text{бл},i},\ t_{\text{ск}} \le 6 \\[6pt]
+  & t_{\text{р}} + t_{\text{н.э}} < 0{,}8 \, t_{\text{бл}},\ t_{\text{ск}} \le 6 \\[6pt]
+1 - \dfrac{t_{\text{р}} + t_{\text{н.э}}}{t_{\text{бл}}},
+  & 0{,}8 \, t_{\text{бл}} \le t_{\text{р}} + t_{\text{н.э}} < t_{\text{бл}},\ t_{\text{ск}} \le 6 \\[6pt]
 0,
-  & t_{\text{р},i,j} \ge 0{,}8 \, t_{\text{бл},i}\ \text{или}\ t_{\text{ск}} > 6
+  & t_{\text{р}} + t_{\text{н.э}} \ge t_{\text{бл}}\ \text{или}\ t_{\text{ск}} > 6
 \end{cases}
 """)
 

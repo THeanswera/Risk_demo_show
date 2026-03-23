@@ -201,19 +201,21 @@ def generate_report_docx(
         _add_para(f"  tр + tн.э = {t_p:.2f} + {t_ne:.2f} = {t_p + t_ne:.2f} мин")
         _add_para(f"  tск = {t_ck:.2f} мин")
 
+        # ИСПРАВЛЕНО: диагностика Pэ по п. 17 Методики №1140
+        t_sum = t_p + t_ne
         if t_ck > 6.0:
             _add_para(f"  tск > 6 мин → Pэ = 0.000")
-        elif (t_p + t_ne) <= border:
+        elif t_sum < border:
             _add_para(
-                f"  {t_p + t_ne:.2f} ≤ {border:.2f} и tск = {t_ck:.2f} ≤ 6 → Pэ = 0.999"
+                f"  {t_sum:.2f} < {border:.2f} и tск = {t_ck:.2f} ≤ 6 → Pэ = 0.999"
             )
-        elif t_p < border < (t_p + t_ne):
+        elif t_sum >= t_bl:
+            _add_para(f"  tр + tн.э = {t_sum:.2f} ≥ tбл = {t_bl:.2f} → Pэ = 0.000")
+        else:
             _add_para(
                 f"  Промежуточная ветвь: "
-                f"Pэ = 0.999 × ({border:.2f} - {t_p:.2f}) / {t_ne:.2f} = {p_e:.4f}"
+                f"Pэ = 1 − (tр + tн.э) / tбл = 1 − {t_sum:.2f} / {t_bl:.2f} = {p_e:.4f}"
             )
-        else:
-            _add_para(f"  tр ≥ 0.8·tбл → Pэ = 0.000")
 
     #  Раздел 5: R_i,j 
     doc.add_paragraph()

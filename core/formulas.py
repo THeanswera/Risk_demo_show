@@ -9,31 +9,45 @@ def p_presence(t_pr_hours: float) -> float:
 
 def p_evac(t_p: float, t_bl: float, t_ne: float, t_ck: float) -> float:
     """
-    P_э,i,j - формула (6) №1140, с учётом ветвлений по t_ск и t_p.
+    P_э,i,j - формула (6) п. 17 Методики №1140.
+
     t_p  : расчётное время эвакуации, мин
     t_bl : время блокирования путей эвакуации, мин
     t_ne : время начала эвакуации, мин
     t_ck : время существования скоплений, мин
+
+    Три ветви:
+      tр + tнэ < 0.8·tбл              → Pэ = 0.999
+      0.8·tбл ≤ tр + tнэ < tбл        → Pэ = 1 − (tр + tнэ) / tбл
+      tр + tнэ ≥ tбл                  → Pэ = 0
+    Дополнительно: tск > 6 мин        → Pэ = 0
+    Всегда: Pэ ≤ 0.999.
     """
     t_p = safe_float(t_p)
     t_bl = safe_float(t_bl)
-    t_ne = max(1e-9, safe_float(t_ne))
+    t_ne = safe_float(t_ne)
     t_ck = safe_float(t_ck)
 
-    border = 0.8 * t_bl
-
-    # Ветвь 3: t_ск > 6 или t_p ≥ 0.8·t_бл → P_э = 0
+    # ИСПРАВЛЕНО: по п. 17 Методики №1140, tск > 6 → Pэ = 0
     if t_ck > 6.0:
         return 0.0
 
-    # Ветвь 2: полная эвакуация
-    if (t_p + t_ne) <= border:
-        return P_E_MAX
+    t_sum = t_p + t_ne
+    border = 0.8 * t_bl
 
-    # Ветвь 1: промежуточное значение
-    if (t_p < border) and (border < (t_p + t_ne)):
-        val = P_E_MAX * ((border - t_p) / t_ne)
-        return clamp(val, 0.0, P_E_MAX)
+    # ИСПРАВЛЕНО: условие по п. 17 — сравниваем (tр + tнэ) с 0.8·tбл, а не tр
+    if t_sum < border:
+        return P_E_MAX  # 0.999
+
+    # ИСПРАВЛЕНО: по п. 17 — tр + tнэ ≥ tбл → Pэ = 0
+    if t_sum >= t_bl:
+        return 0.0
+
+    # ИСПРАВЛЕНО: промежуточная ветвь по п. 17 — Pэ = 1 − (tр + tнэ) / tбл
+    # (было: 0.999 × (0.8·tбл − tр) / tнэ — формула из старой методики №382)
+    if t_bl > 0:
+        val = 1.0 - t_sum / t_bl
+        return min(val, P_E_MAX)
 
     return 0.0
 

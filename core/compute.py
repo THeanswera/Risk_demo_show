@@ -7,7 +7,7 @@ from typing import Tuple
 import numpy as np
 import pandas as pd
 
-from core.constants import K_STD, R_NORM
+from core.constants import K_AP_VALUE, K_STD, R_NORM
 from core.formulas import p_presence, k_pz, p_evac, r_ij
 from utils.helpers import safe_float
 
@@ -35,7 +35,7 @@ def compute_all(
     if df_scen["Сценарий i"].duplicated().any():
         df_scen = df_scen.drop_duplicates(subset=["Сценарий i"], keep="first").copy()
 
-    for c in ["Q_п,i (год⁻¹)", "t_пр,i (ч/сут)", "t_бл,i (мин)", "K_ап,i"]:
+    for c in ["Q_п,i (год⁻¹)", "t_пр,i (ч/сут)", "t_бл,i (мин)"]:
         if c in df_scen.columns:
             df_scen[c] = pd.to_numeric(df_scen[c], errors="coerce").fillna(0.0)
 
@@ -43,7 +43,13 @@ def compute_all(
         if c in df_grp.columns:
             df_grp[c] = pd.to_numeric(df_grp[c], errors="coerce").fillna(0.0)
 
-    # K_обн, K_СОУЭ, K_ПДЗ - 0 или 0.8 строго по №1140
+    # ИСПРАВЛЕНО: K_ап строго 0 или 0.9 (п. 15 Методики №1140)
+    if "АУП соответствует? (K_ап=0.9)" in df_scen.columns:
+        df_scen["K_ап,i"] = np.where(df_scen["АУП соответствует? (K_ап=0.9)"].astype(bool), K_AP_VALUE, 0.0)
+    elif "K_ап,i" not in df_scen.columns:
+        df_scen["K_ап,i"] = 0.0
+
+    # K_обн, K_СОУЭ, K_ПДЗ - 0 или 0.8 строго по №1140 (п. 41, 44, 45)
     for col_bool, col_k in [
         ("ПС соответствует? (K_обн=0.8)", "K_обн,i"),
         ("СОУЭ соответствует? (K_СОУЭ=0.8)", "K_СОУЭ,i"),
