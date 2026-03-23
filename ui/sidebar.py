@@ -13,13 +13,12 @@ from utils.helpers import ensure_unique_positive_int_ids, force_rerun, safe_floa
 
 
 def render_sidebar() -> None:
-    """Отрисовать боковую панель со справочниками, слайдерами и расчётом tбл."""
     with st.sidebar:
-        st.header("Справочники и надстройки")
+        st.header("Настройки параметров и справочники")
 
         # Справочник Q_п
-        st.subheader("Частота пожара Qп,ᵢ")
-        st.caption("Приложение 3, Таблица П3.1 (п. 15)")
+        st.subheader("Определение частоты пожара (Qп,ᵢ)")
+        st.caption("Приложение 3, Таблица П3.1")
         building_type = st.selectbox(
             "Тип здания",
             list(FIRE_FREQ_TABLE.keys()),
@@ -77,7 +76,7 @@ def render_sidebar() -> None:
                 "Площадь помещения Fпом (м²)", min_value=1.0, value=100.0, step=10.0
             )
             t_ne_ref = t_ne_formula(f_pom)
-            st.metric("tн.э (мин) = (5 + 0.01·F) / 60", f"{t_ne_ref:.3f}")
+            st.metric("tн.э (мин) = (5 + 0.01·Fпом)", f"{t_ne_ref:.3f}")
             st.caption(f"= {t_ne_ref * 60:.1f} секунд")
 
         df_grp_sidebar = st.session_state.df_grp.copy()
