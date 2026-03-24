@@ -9,6 +9,7 @@ from core.constants import K_STD
 from core.formulas import t_ne_formula
 from core.tables import FIRE_FREQ_TABLE, T_NE_TABLE
 from core.t_block import FIRE_LOAD_TABLE, calc_t_block
+from ui.evacuation import render_evacuation
 from utils.helpers import ensure_unique_positive_int_ids, force_rerun, safe_float
 
 
@@ -17,7 +18,7 @@ def render_sidebar() -> None:
         st.title("Настройки параметров и справочники")
 
         # Справочник Q_п
-        st.subheader("Определение частоты пожара (Q_п,ᵢ)")
+        st.subheader("Определение частоты возникновения пожара Q_п,ᵢ")
         st.caption("Приложение 3, Таблица П3.1")
         building_type = st.selectbox(
             "Тип здания",
@@ -251,3 +252,8 @@ def render_sidebar() -> None:
                     df_s.at[idx, "t_бл,i (мин)"] = res["t_bl"]
                     st.session_state.df_scen = df_s
                     force_rerun()
+
+        st.divider()
+
+        # Расчёт tр по Приложению 6
+        render_evacuation()

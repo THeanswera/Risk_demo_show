@@ -95,6 +95,38 @@ def generate_report_docx(
 
     doc.add_paragraph()
 
+    # Раздел 0 (опциональный): Расчёт времени эвакуации
+    evac_result = None
+    evac_group = None
+    try:
+        import streamlit as _st
+        evac_result = _st.session_state.get("evac_result")
+        evac_group = _st.session_state.get("evac_result_group")
+    except Exception:
+        pass
+
+    if evac_result and evac_result.get("segments_detail"):
+        _add_heading("Расчёт времени эвакуации (Приложение 6)", level=1)
+        if evac_group:
+            _add_para(f"Группа контингента: {evac_group}")
+
+        seg_headers = ["N", "Тип", "Длина (м)", "Ширина (м)", "D (м2/м2)",
+                       "V (м/мин)", "q (м/мин)", "t (мин)", "Скопление"]
+        seg_rows = []
+        for s in evac_result["segments_detail"]:
+            seg_rows.append([
+                s["N"], s["тип"],
+                f"{s['длина']:.3f}", f"{s['ширина']:.3f}",
+                f"{s['D']:.3f}", f"{s['V']:.3f}",
+                f"{s['q']:.3f}", f"{s['t']:.3f}",
+                "Да" if s["скопление"] else "Нет",
+            ])
+        _add_table(seg_headers, seg_rows)
+        doc.add_paragraph()
+        _add_para(f"tр = {evac_result['t_p']:.3f} мин", bold=True)
+        _add_para(f"tск = {evac_result['t_ck']:.3f} мин", bold=True)
+        doc.add_paragraph()
+
     # Раздел 1: Исходные данные
     _add_heading("1. Исходные данные", level=1)
 
