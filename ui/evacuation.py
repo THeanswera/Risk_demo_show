@@ -3,6 +3,8 @@ UI для расчета tр и tск по Приложению 6 Методик
 Упрощенная аналитическая модель движения людского потока.
 """
 
+import math
+
 import pandas as pd
 import streamlit as st
 
@@ -126,11 +128,14 @@ def render_evacuation() -> None:
         # Преобразуем DataFrame в список dict для calc_evacuation
         segments = []
         for _, row in df_seg.iterrows():
+            typ = row.get("Тип")
+            if typ is None or (isinstance(typ, float) and math.isnan(typ)):
+                continue
             segments.append({
-                "тип": row.get("Тип", "горизонтальный"),
-                "длина": float(row.get("Длина (м)", 0)),
-                "ширина": float(row.get("Ширина (м)", 1)),
-                "людей": int(row.get("Людей", 0)),
+                "тип": typ,
+                "длина": float(row.get("Длина (м)", 0) or 0),
+                "ширина": float(row.get("Ширина (м)", 1) or 1),
+                "людей": int(row.get("Людей", 0) or 0),
             })
 
         try:
