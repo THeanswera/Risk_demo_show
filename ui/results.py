@@ -28,7 +28,7 @@ def render_results(r_final: float, df_scen_calc: pd.DataFrame,
         else:
             st.error("R > Rнорм: Пожарный риск ПРЕВЫШЕН (формула 1)")
 
-    components.html(risk_gauge_html(r_final, R_NORM), height=420, scrolling=False)
+    components.html(risk_gauge_html(r_final, R_NORM), height=450, scrolling=False)
 
     # Сводка по сценариям 
     st.subheader("Сводная таблица ИПР по сценариям - формулы (2) и (3)")

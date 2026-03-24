@@ -64,7 +64,7 @@ def risk_gauge_html(r_value: float, r_norm: float) -> str:
     --val: {status_color};
   }}
   body {{ margin:0; background:transparent; font-family: system-ui, Segoe UI, Arial; color:var(--txt); }}
-  .wrap {{ display:grid; grid-template-columns: 240px 1fr; gap:16px; padding:8px 2px; }}
+  .wrap {{ display:grid; grid-template-columns: 240px 1fr; gap:16px; padding:8px 2px 20px 2px; }}
   .card {{ background:var(--bg); border:1px solid var(--bd); border-radius:14px; padding:14px; }}
   .title {{ font-size:12px; color:var(--muted); margin:0 0 10px 0; }}
 
@@ -93,7 +93,7 @@ def risk_gauge_html(r_value: float, r_norm: float) -> str:
   .name {{ font-weight:800; font-size:13px; }}
   .val {{ font-size:12px; color:var(--muted); margin-top:2px; }}
 
-  .status {{ text-align:center; margin-top:12px; padding:8px; border-radius:8px; font-weight:800; font-size:14px;
+  .status {{ text-align:center; margin-top:12px; margin-bottom:4px; padding:10px; border-radius:10px; font-weight:800; font-size:14px;
     background: rgba({'74,222,128' if passed else '248,113,113'},0.15);
     color: var(--val); border: 1px solid var(--val); }}
 </style>
